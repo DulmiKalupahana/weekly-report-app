@@ -1,90 +1,147 @@
 const Report = require('../models/Report');
 
-// @desc    Create a new weekly report
+// @desc    Submit a new weekly report
 // @route   POST /api/reports
-// @access  Private (Logged in users only)
+// @access  Private (any logged-in user)
 const createReport = async (req, res) => {
-    const {
-        projectId,
-        weekStartDate,
-        tasksCompleted,
-        tasksPlannedNextWeek,
-        blockers,
-        hoursWorked,
-        notes,
-        status
-    } = req.body;
-
     try {
-        const report = await Report.create({
-            user: req.user._id,
-            project: projectId,
+        const {
+            projectId,
             weekStartDate,
+            weekEndDate,
             tasksCompleted,
             tasksPlannedNextWeek,
             blockers,
             hoursWorked,
-            notes,
-            status
+            notes
+        } = req.body;
+
+        if (!projectId || !weekStartDate || !tasksCompleted || !tasksPlannedNextWeek) {
+            return res.status(400).json({ message: 'Project, week start date, tasks completed and tasks planned are required.' });
+        }
+
+        const report = await Report.create({
+            user: req.user._id,
+            project: projectId,
+            weekStartDate,
+            weekEndDate: weekEndDate || undefined,
+            tasksCompleted,
+            tasksPlannedNextWeek,
+            blockers,
+            hoursWorked,
+            notes
         });
 
-        res.status(201).json(report);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+        const populated = await report.populate('project', 'name');
+        res.status(201).json(populated);
+    } catch (err) {
+        console.error('createReport error', err);
+        res.status(500).json({ message: 'Error submitting report.' });
     }
 };
 
-// @desc    Get logged-in user's reports (History)
+// @desc    Get the logged-in user's own reports
 // @route   GET /api/reports/myreports
 // @access  Private
 const getMyReports = async (req, res) => {
     try {
-        // තමන්ගේ reports විතරක් අලුත්ම එකේ ඉඳන් පරණ එකට පෙළගස්වලා ගන්නවා
         const reports = await Report.find({ user: req.user._id })
-            .populate('project', 'name') // Project එකේ නමත් එක්කම ගන්නවා
+            .populate('project', 'name')
             .sort({ weekStartDate: -1 });
 
         res.json(reports);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch (err) {
+        console.error('getMyReports error', err);
+        res.status(500).json({ message: 'Error fetching your reports.' });
     }
 };
 
-// @desc    Get ALL reports (For Manager View)
+// @desc    Get all reports across all users (manager view)
 // @route   GET /api/reports
-// @access  Private/Manager
+// @access  Private (manager only)
 const getAllReports = async (req, res) => {
     try {
         const reports = await Report.find({})
-            .populate('user', 'name email') // User ගේ නම සහ ඊමේල් එක
-            .populate('project', 'name')    // Project එකේ නම
+            .populate('project', 'name')
+            .populate('user', 'name email')
             .sort({ weekStartDate: -1 });
 
         res.json(reports);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch (err) {
+        console.error('getAllReports error', err);
+        res.status(500).json({ message: 'Error fetching reports.' });
     }
 };
 
-// @desc    Update a report
+// @desc    Update a report (owner only)
 // @route   PUT /api/reports/:id
 // @access  Private
 const updateReport = async (req, res) => {
     try {
         const report = await Report.findById(req.params.id);
 
-        if (!report) return res.status(404).json({ message: 'Report not found' });
-
-        // මේ report එක අයිති කෙනාමද edit කරන්නේ කියලා බලනවා
-        if (report.user.toString() !== req.user._id.toString()) {
-            return res.status(401).json({ message: 'User not authorized to edit this report' });
+        if (!report) {
+            return res.status(404).json({ message: 'Report not found.' });
         }
 
-        const updatedReport = await Report.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.json(updatedReport);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+        // Only the report's owner can edit it
+        if (report.user.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You are not allowed to edit this report.' });
+        }
+
+        const {
+            projectId,
+            weekStartDate,
+            weekEndDate,
+            tasksCompleted,
+            tasksPlannedNextWeek,
+            blockers,
+            hoursWorked,
+            notes
+        } = req.body;
+
+        if (projectId) report.project = projectId;
+        if (weekStartDate) report.weekStartDate = weekStartDate;
+        report.weekEndDate = weekEndDate || undefined;
+        if (tasksCompleted !== undefined) report.tasksCompleted = tasksCompleted;
+        if (tasksPlannedNextWeek !== undefined) report.tasksPlannedNextWeek = tasksPlannedNextWeek;
+        if (blockers !== undefined) report.blockers = blockers;
+        if (hoursWorked !== undefined) report.hoursWorked = hoursWorked;
+        if (notes !== undefined) report.notes = notes;
+
+        const updated = await report.save();
+        const populated = await updated.populate('project', 'name');
+        res.json(populated);
+    } catch (err) {
+        console.error('updateReport error', err);
+        res.status(500).json({ message: 'Error updating report.' });
     }
 };
 
-module.exports = { createReport, getMyReports, getAllReports, updateReport };
+const deleteReport = async (req, res) => {
+    try {
+        const report = await Report.findById(req.params.id);
+
+        if (!report) {
+            return res.status(404).json({ message: 'Report not found.' });
+        }
+
+        if (report.user.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(401).json({ message: 'User not authorized to delete this report.' });
+        }
+
+        await Report.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: 'Report deleted successfully.' });
+    } catch (error) {
+        console.error('Error in deleteReport controller:', error);
+        res.status(500).json({ message: error.message || 'Server error.' });
+    }
+};
+
+module.exports = {
+    createReport,
+    getMyReports,
+    getAllReports,
+    updateReport,
+    deleteReport
+};

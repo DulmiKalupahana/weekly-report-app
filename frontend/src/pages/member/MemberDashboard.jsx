@@ -1,66 +1,84 @@
-import { useState, useEffect } from 'react';
-import { submitReport, getMyReports } from '../../api/reportService';
-import API from '../../api/axios';
+// 1. useContext සහ useMemo මෙතනට එක් කළා
+import React, { useState, useEffect, useContext, useMemo } from 'react'; 
+import { getMyReports } from '../../api/reportService';
+import { getProjects } from '../../api/projectService'; // Projects fetch කිරීමට මෙය අවශ්‍ය වේ
+import MemberSidebar from '../../components/MemberSidebar';
+// 2. AuthContext එක import කළා
+import { AuthContext } from '../../context/AuthContext'; 
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { TrendingUp, Clock, FileCheck } from 'lucide-react';
 
 const MemberDashboard = () => {
+    // AuthContext එක දැන් වැඩ කරනු ඇත
+    const { user } = useContext(AuthContext); 
     const [reports, setReports] = useState([]);
-    const [projects, setProjects] = useState([]);
-    const [formData, setFormData] = useState({
-        projectId: '', weekStartDate: '', tasksCompleted: '', 
-        tasksPlannedNextWeek: '', blockers: '', hoursWorked: 0
-    });
+    const [projects, setProjects] = useState([]); // Projects සඳහා state එකක් එක් කළා
+    const [stats, setStats] = useState({ totalReports: 0, totalHours: 0 });
 
     useEffect(() => {
-        fetchData();
-        // Load projects for the dropdown
-        API.get('/projects').then(res => setProjects(res.data));
+        const load = async () => {
+            // Reports සහ Projects යන දෙකම fetch කිරීම
+            const [reportsData, projectsData] = await Promise.all([
+                getMyReports(),
+                getProjects()
+            ]);
+            
+            setReports(reportsData);
+            setProjects(projectsData);
+            
+            const hours = reportsData.reduce((sum, r) => sum + (r.hoursWorked || 0), 0);
+            setStats({ totalReports: reportsData.length, totalHours: hours });
+        };
+        load();
     }, []);
 
-    const fetchData = async () => {
-        const data = await getMyReports();
-        setReports(data);
-    };
+    // 3. assignedProjects logic එක (දැන් projects සහ user යන දෙකම ඇති නිසා වැඩ කරයි)
+    const assignedProjects = useMemo(() => {
+        if (!user || !user._id || !projects) return [];
+        
+        return projects.filter(project => 
+            project.members?.some(member => 
+                (typeof member === 'string' ? member === user._id : member._id === user._id)
+            )
+        );
+    }, [projects, user]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        await submitReport(formData);
-        alert("Report Submitted!");
-        setFormData({ projectId: '', weekStartDate: '', tasksCompleted: '', tasksPlannedNextWeek: '', blockers: '', hoursWorked: 0 });
-        fetchData();
-    };
+    const chartData = reports.slice(0, 8).reverse().map(r => ({
+        week: new Date(r.weekStartDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        hours: r.hoursWorked || 0
+    }));
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Weekly Work Report</h1>
-            
-            {/* Report Form */}
-            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-md mb-10 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <select className="border p-2 rounded" required onChange={e => setFormData({...formData, projectId: e.target.value})}>
-                        <option value="">Select Project</option>
-                        {projects.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
-                    </select>
-                    <input type="date" className="border p-2 rounded" required onChange={e => setFormData({...formData, weekStartDate: e.target.value})} />
-                </div>
-                <textarea placeholder="Tasks Completed" className="w-full border p-2 rounded" required onChange={e => setFormData({...formData, tasksCompleted: e.target.value})} />
-                <textarea placeholder="Tasks Planned for Next Week" className="w-full border p-2 rounded" required onChange={e => setFormData({...formData, tasksPlannedNextWeek: e.target.value})} />
-                <textarea placeholder="Blockers / Challenges" className="w-full border p-2 rounded" required onChange={e => setFormData({...formData, blockers: e.target.value})} />
-                <input type="number" placeholder="Hours Worked" className="border p-2 rounded w-full" onChange={e => setFormData({...formData, hoursWorked: e.target.value})} />
-                <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">Submit Report</button>
-            </form>
-
-            {/* History List */}
-            <h2 className="text-xl font-bold mb-4">My Report History</h2>
-            <div className="space-y-4">
-                {reports.map(report => (
-                    <div key={report._id} className="bg-gray-50 p-4 rounded-lg border">
-                        <div className="flex justify-between font-bold text-blue-600">
-                            <span>{report.project?.name}</span>
-                            <span>{new Date(report.weekStartDate).toLocaleDateString()}</span>
-                        </div>
-                        <p className="text-sm mt-2"><b>Completed:</b> {report.tasksCompleted}</p>
+        <div className="flex bg-slate-50 min-h-screen">
+            <MemberSidebar />
+            <div className="ml-64 p-8 w-full">
+                <h1 className="text-2xl font-bold mb-8 text-slate-800">Overall Progress</h1>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500 flex justify-between items-center">
+                        <div><p className="text-slate-400 text-xs font-bold uppercase">Total Hours</p><h3 className="text-3xl font-bold text-slate-800">{stats.totalHours}h</h3></div>
+                        <Clock size={32} className="text-blue-100" />
                     </div>
-                ))}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500 flex justify-between items-center">
+                        <div><p className="text-slate-400 text-xs font-bold uppercase">Reports Submitted</p><h3 className="text-3xl font-bold text-slate-800">{stats.totalReports}</h3></div>
+                        <FileCheck size={32} className="text-green-100" />
+                    </div>
+                </div>
+
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 className="font-bold mb-6 flex items-center gap-2 text-slate-800"><TrendingUp size={20} className="text-blue-500"/> Work Hours Trend</h2>
+                    <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                                <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                <Bar dataKey="hours" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
             </div>
         </div>
     );

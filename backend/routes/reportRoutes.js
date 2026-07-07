@@ -1,19 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const {
-    createProject,
-    getProjects,
-    updateProject,
-    deleteProject
-} = require('../controllers/projectController');
+    createReport,
+    getMyReports,
+    getAllReports,
+    updateReport,
+    deleteReport
+} = require('../controllers/reportController');
 const { protect, managerOnly } = require('../middleware/authMiddleware');
 
 router.route('/')
-    .post(protect, managerOnly, createProject)
-    .get(protect, getProjects);
+    .post(protect, createReport)
+    .get(protect, managerOnly, getAllReports);
+
+
+router.get('/myreports', protect, getMyReports);
 
 router.route('/:id')
-    .put(protect, managerOnly, updateProject)
-    .delete(protect, managerOnly, deleteProject);
+    .put(protect, updateReport);
+
+router.delete('/:id', protect, deleteReport);
 
 module.exports = router;

@@ -1,7 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useContext } from 'react';
-import { AuthProvider } from './context/AuthContext';
-import { AuthContext } from './context/auth-context';
+import { AuthContext } from './context/AuthContext';
+import Profile from './pages/Profile';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -13,6 +13,8 @@ import TeamReports from './pages/manager/TeamReports';
 import ProjectManager from './pages/manager/ProjectManager';
 
 // Member Pages
+import MyReports from './pages/member/MyReports';
+import MyProjects from './pages/member/MyProjects';
 import MemberDashboard from './pages/member/MemberDashboard';
 
 // Protected Route Component
@@ -32,12 +34,12 @@ const ProtectedRoute = ({ children, roleRequired }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+      <BrowserRouter>
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
 
           {/* Manager Routes (Protected) */}
           <Route path="/manager-dashboard" element={
@@ -62,12 +64,22 @@ function App() {
               <MemberDashboard />
             </ProtectedRoute>
           } />
+          <Route path="/member/reports" element={
+            <ProtectedRoute roleRequired="member">
+              <MyReports />
+            </ProtectedRoute>
+          } />
+          <Route path="/member/projects" element={
+            <ProtectedRoute roleRequired="member">
+              <MyProjects />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={<Profile />} />
 
           {/* Default Redirect */}
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
-      </Router>
-    </AuthProvider>
+      </BrowserRouter>
   );
 }
 

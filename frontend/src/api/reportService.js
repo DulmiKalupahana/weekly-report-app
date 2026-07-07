@@ -22,3 +22,8 @@ export const updateReport = async (id, reportData) => {
     const res = await API.put(`/reports/${id}`, reportData);
     return res.data;
 };
+
+export const deleteReport = async (reportId) => {
+    const response = await API.delete(`/reports/${reportId}`);
+    return response.data;
+};
