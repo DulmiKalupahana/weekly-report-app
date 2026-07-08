@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useState, useContext } from 'react'; // useContext එක් කළා
+import { useCallback, useEffect, useMemo, useState, useContext } from 'react';
 import { submitReport, getMyReports, updateReport, deleteReport } from '../../api/reportService';
 import { getProjects } from '../../api/projectService';
 import MemberSidebar from '../../components/MemberSidebar';
-import { AuthContext } from '../../context/AuthContext'; // Context එක import කළා
+import { AuthContext } from '../../context/AuthContext';
 import React from 'react';
 import {
     Plus, Edit3, Calendar, Folder, Clock, AlertTriangle,
-    CheckCircle2, ListTodo, Loader2, X, FileText, Info, Trash2
+    CheckCircle2, ListTodo, Loader2, X, FileText, Trash2
 } from 'lucide-react';
 
 const emptyForm = {
@@ -20,9 +20,6 @@ const emptyForm = {
     notes: ''
 };
 
-const MAX_TASK_LEN = 1000;
-const MAX_BLOCKERS_LEN = 500;
-const MAX_NOTES_LEN = 300;
 const MAX_HOURS = 80;
 
 const getWeekStart = (date) => {
@@ -39,7 +36,7 @@ const formatDate = (dateStr) => {
 };
 
 const MyReports = () => {
-    const { user } = useContext(AuthContext); // දැනට ඉන්න User ලබා ගැනීම
+    const { user } = useContext(AuthContext);
     const [reports, setReports] = useState([]);
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -81,10 +78,9 @@ const MyReports = () => {
         fetchAll();
     }, [fetchAll]);
 
-    // --- මෙතන තමයි assignedProjects නිර්මාණය කරන්නේ ---
     const assignedProjects = useMemo(() => {
         if (!user || !projects.length) return [];
-        return projects.filter(project => 
+        return projects.filter(project =>
             project.members?.some(member => {
                 const memberId = typeof member === 'object' ? member._id : member;
                 return memberId === user._id;
@@ -272,17 +268,17 @@ const MyReports = () => {
     };
 
     return (
-        <div className="flex bg-slate-50 min-h-screen font-sans">
+        <div className="flex bg-background min-h-screen font-sans">
             <MemberSidebar />
-            <div className="ml-64 p-8 w-full max-w-5xl">
-                <div className="flex justify-between items-center mb-10">
+            <div className="ml-0 md:ml-64 p-4 pt-20 md:p-8 w-full">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-800">Weekly Reports</h2>
-                        <p className="text-slate-500">Track your progress, week by week</p>
+                        <h2 className="text-2xl font-bold text-text-primary">Weekly Reports</h2>
+                        <p className="text-text-secondary">Track your progress, week by week</p>
                     </div>
                     <button
                         onClick={handleOpenCreate}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg"
+                        className="bg-primary-600 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-primary-700 transition shadow-lg shadow-primary-900/10 w-full sm:w-auto justify-center"
                     >
                         <Plus size={20} /> New Report
                     </button>
@@ -290,22 +286,22 @@ const MyReports = () => {
 
                 {/* --- FILTER SECTION --- */}
                 {!loading && !listError && (
-                    <div className="bg-white border border-slate-100 rounded-2xl shadow-sm p-5 mb-8">
+                    <div className="bg-surface border border-border rounded-2xl shadow-sm p-5 mb-8">
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-text-muted flex items-center gap-2">
                                 <ListTodo size={14} /> Filter Reports
                             </h3>
                             {hasActiveFilters && (
-                                <button onClick={clearFilters} className="text-xs font-bold text-blue-600 hover:text-blue-700">Clear filters</button>
+                                <button onClick={clearFilters} className="text-xs font-bold text-primary-600 hover:text-primary-700">Clear filters</button>
                             )}
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">Project</label>
+                                <label className="block text-xs font-bold text-text-secondary mb-1">Project</label>
                                 <select
                                     value={filterProjectId}
                                     onChange={(e) => setFilterProjectId(e.target.value)}
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-border rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500"
                                 >
                                     <option value="">All assigned projects</option>
                                     {assignedProjects.map((p) => (
@@ -314,44 +310,44 @@ const MyReports = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">Month</label>
-                                <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                                <label className="block text-xs font-bold text-text-secondary mb-1">Month</label>
+                                <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">From date</label>
-                                <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                                <label className="block text-xs font-bold text-text-secondary mb-1">From date</label>
+                                <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
                             </div>
                             <div>
-                                <label className="block text-xs font-bold text-slate-500 mb-1">To date</label>
-                                <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm" />
+                                <label className="block text-xs font-bold text-text-secondary mb-1">To date</label>
+                                <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
                             </div>
                         </div>
                     </div>
                 )}
 
-                {loading && <div className="text-sm text-slate-500">Loading your reports...</div>}
-                {!loading && listError && <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{listError}</div>}
-                {!loading && !listError && reports.length === 0 && <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center text-slate-500">No reports yet.</div>}
+                {loading && <div className="text-sm text-text-secondary">Loading your reports...</div>}
+                {!loading && listError && <div className="mb-6 rounded-xl border border-danger-100 bg-danger-50 px-4 py-3 text-sm text-danger-600">{listError}</div>}
+                {!loading && !listError && reports.length === 0 && <div className="rounded-xl border border-dashed border-border bg-surface px-6 py-10 text-center text-text-secondary">No reports yet.</div>}
 
                 <div className="space-y-8">
                     {groupedReports.map((group) => (
                         <section key={group.weekStart.toISOString()}>
-                            <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-text-muted mb-3 flex items-center gap-2">
                                 <Calendar size={14} /> Week of {formatDate(group.weekStart)}
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                 {group.items.map((report) => (
-                                    <div key={report._id} onClick={() => handleViewReport(report)} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:border-blue-300 transition cursor-pointer group">
+                                    <div key={report._id} onClick={() => handleViewReport(report)} className="bg-surface p-6 rounded-2xl shadow-sm border border-border hover:border-primary-300 transition cursor-pointer group">
                                         <div className="flex justify-between items-start mb-3">
-                                            <div className="bg-blue-50 p-3 rounded-xl text-blue-600"><Folder size={20} /></div>
+                                            <div className="bg-primary-50 p-3 rounded-xl text-primary-600"><Folder size={20} /></div>
                                             <div className="flex gap-2">
-                                                <button onClick={(e) => handleEditFromCard(e, report)} className="p-2 text-slate-400 hover:text-blue-500 transition"><Edit3 size={16} /></button>
-                                                <button onClick={(e) => handleDeleteReport(e, report._id)} className="p-2 text-slate-400 hover:text-rose-500 transition"><Trash2 size={16} /></button>
+                                                <button onClick={(e) => handleEditFromCard(e, report)} className="p-2 text-text-muted hover:text-primary-500 transition"><Edit3 size={16} /></button>
+                                                <button onClick={(e) => handleDeleteReport(e, report._id)} className="p-2 text-text-muted hover:text-danger-500 transition"><Trash2 size={16} /></button>
                                             </div>
                                         </div>
-                                        <h4 className="text-md font-bold text-slate-800 mb-1">{report.project?.name || 'Unknown Project'}</h4>
-                                        <p className="text-sm text-slate-500 mb-3 line-clamp-2">{report.tasksCompleted}</p>
-                                        <div className="flex items-center gap-4 text-xs text-slate-400">
+                                        <h4 className="text-md font-bold text-text-primary mb-1">{report.project?.name || 'Unknown Project'}</h4>
+                                        <p className="text-sm text-text-secondary mb-3 line-clamp-2">{report.tasksCompleted}</p>
+                                        <div className="flex items-center gap-4 text-xs text-text-muted">
                                             <span className="flex items-center gap-1"><Calendar size={12} /> {formatDate(report.weekStartDate)}</span>
                                             {report.hoursWorked && <span className="flex items-center gap-1"><Clock size={12} /> {report.hoursWorked}h</span>}
                                         </div>
@@ -365,20 +361,20 @@ const MyReports = () => {
 
             {/* --- ADD / EDIT MODAL --- */}
             {modalOpen && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeModal}>
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center">
-                            <h3 className="text-xl font-bold text-slate-800">{isEditing ? 'Edit Weekly Report' : 'New Weekly Report'}</h3>
-                            <button onClick={closeModal} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
+                <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeModal}>
+                    <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="px-8 py-6 border-b border-border flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-text-primary">{isEditing ? 'Edit Weekly Report' : 'New Weekly Report'}</h3>
+                            <button onClick={closeModal} className="text-text-muted hover:text-text-primary"><X size={24} /></button>
                         </div>
                         <div className="p-8 space-y-5 max-h-[70vh] overflow-y-auto">
-                            {submitError && <div className="bg-rose-50 text-rose-700 p-3 rounded-xl text-sm">{submitError}</div>}
+                            {submitError && <div className="bg-danger-50 text-danger-600 p-3 rounded-xl text-sm">{submitError}</div>}
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Project / Category</label>
+                                <label className="block text-sm font-bold text-text-primary mb-2">Project / Category</label>
                                 <select
                                     value={form.projectId}
                                     onChange={handleFieldChange('projectId')}
-                                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none ${formErrors.projectId ? 'border-rose-400' : 'border-slate-200'}`}
+                                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary-500 outline-none ${formErrors.projectId ? 'border-danger-400' : 'border-border'}`}
                                 >
                                     <option value="">Select an assigned project...</option>
                                     {assignedProjects.map((p) => (
@@ -386,66 +382,65 @@ const MyReports = () => {
                                     ))}
                                 </select>
                                 {assignedProjects.length === 0 && !loading && (
-                                    <p className="mt-1 text-[10px] text-amber-600 font-medium">⚠️ No projects assigned. Contact manager.</p>
+                                    <p className="mt-1 text-[10px] text-warning-600 font-medium">⚠️ No projects assigned. Contact manager.</p>
                                 )}
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Week Start</label>
-                                    <input type="date" value={form.weekStartDate} max={new Date().toISOString().split('T')[0]} onChange={handleDateChange} className="w-full px-4 py-3 border rounded-xl" />
+                                    <label className="block text-sm font-bold text-text-primary mb-2">Week Start</label>
+                                    <input type="date" value={form.weekStartDate} max={new Date().toISOString().split('T')[0]} onChange={handleDateChange} className="w-full px-4 py-3 border border-border rounded-xl" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Week End (Auto)</label>
-                                    <input type="date" value={form.weekEndDate} readOnly className="w-full px-4 py-3 border rounded-xl bg-slate-50" />
+                                    <label className="block text-sm font-bold text-text-primary mb-2">Week End (Auto)</label>
+                                    <input type="date" value={form.weekEndDate} readOnly className="w-full px-4 py-3 border border-border rounded-xl bg-surface-secondary" />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Tasks Completed</label>
-                                <textarea value={form.tasksCompleted} onChange={handleFieldChange('tasksCompleted')} rows={3} className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500" />
+                                <label className="block text-sm font-bold text-text-primary mb-2">Tasks Completed</label>
+                                <textarea value={form.tasksCompleted} onChange={handleFieldChange('tasksCompleted')} rows={3} className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500" />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Tasks Planned for Next Week</label>
-                                <textarea value={form.tasksPlannedNextWeek} onChange={handleFieldChange('tasksPlannedNextWeek')} rows={3} className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500" />
+                                <label className="block text-sm font-bold text-text-primary mb-2">Tasks Planned for Next Week</label>
+                                <textarea value={form.tasksPlannedNextWeek} onChange={handleFieldChange('tasksPlannedNextWeek')} rows={3} className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500" />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-bold text-slate-700 mb-2">Blockers / Challenges (optional)</label>
+                                <label className="block text-sm font-bold text-text-primary mb-2">Blockers / Challenges (optional)</label>
                                 <textarea
                                     value={form.blockers}
                                     onChange={handleFieldChange('blockers')}
                                     rows={2}
-                                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" 
+                                    className="w-full px-4 py-3 border border-border rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
                                     placeholder="Any issues or blockers..."
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Hours Worked</label>
-                                    <input type="text" value={form.hoursWorked} onChange={handleHoursInput} placeholder="Max 80" className="w-full px-4 py-3 border rounded-xl" />
+                                    <label className="block text-sm font-bold text-text-primary mb-2">Hours Worked</label>
+                                    <input type="text" value={form.hoursWorked} onChange={handleHoursInput} placeholder="Max 80" className="w-full px-4 py-3 border border-border rounded-xl" />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-700 mb-2">Notes (optional)</label>
-                                    <input type="text" value={form.notes} onChange={handleFieldChange('notes')} className="w-full px-4 py-3 border rounded-xl" />
+                                    <label className="block text-sm font-bold text-text-primary mb-2">Notes (optional)</label>
+                                    <input type="text" value={form.notes} onChange={handleFieldChange('notes')} className="w-full px-4 py-3 border border-border rounded-xl" />
                                 </div>
                             </div>
                         </div>
-                        <div className="p-6 bg-slate-50 flex gap-3">
-                            <button onClick={handleSubmit} disabled={submitting} className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 disabled:bg-slate-300">
+                        <div className="p-6 bg-surface-secondary flex gap-3">
+                            <button onClick={handleSubmit} disabled={submitting} className="flex-1 bg-primary-600 text-white py-3 rounded-xl font-bold hover:bg-primary-700 disabled:bg-border">
                                 {submitting ? 'Submitting...' : isEditing ? 'Save Changes' : 'Submit Report'}
                             </button>
-                            <button onClick={closeModal} className="px-6 py-3 font-bold text-slate-500">Cancel</button>
+                            <button onClick={closeModal} className="px-6 py-3 font-bold text-text-secondary">Cancel</button>
                         </div>
                     </div>
                 </div>
             )}
-            
+
             {/* --- VIEW DETAILS MODAL --- */}
             {viewModalOpen && viewingReport && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={closeViewModal}>
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                        {/* Modal Header */}
-                        <div className="bg-blue-600 p-8 text-white relative">
+                <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={closeViewModal}>
+                    <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="bg-primary-600 p-8 text-white relative">
                             <button onClick={closeViewModal} className="absolute top-6 right-6 text-white/80 hover:text-white">
                                 <X size={24} />
                             </button>
@@ -453,62 +448,60 @@ const MyReports = () => {
                                 <Folder size={28} />
                             </div>
                             <h3 className="text-2xl font-bold">{viewingReport.project?.name || 'Unknown Project'}</h3>
-                            <p className="text-blue-100 text-sm mt-1 flex items-center gap-2">
+                            <p className="text-primary-100 text-sm mt-1 flex items-center gap-2">
                                 <Calendar size={14} /> {formatDate(viewingReport.weekStartDate)}
                                 {viewingReport.weekEndDate ? ` – ${formatDate(viewingReport.weekEndDate)}` : ''}
                             </p>
                         </div>
 
-                        {/* Modal Body */}
                         <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
                             <section>
-                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                <h4 className="text-xs font-black uppercase tracking-widest text-text-muted mb-2 flex items-center gap-2">
                                     <CheckCircle2 size={14} /> Tasks Completed
                                 </h4>
-                                <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.tasksCompleted}</p>
+                                <p className="text-text-secondary leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.tasksCompleted}</p>
                             </section>
 
                             <section>
-                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                <h4 className="text-xs font-black uppercase tracking-widest text-text-muted mb-2 flex items-center gap-2">
                                     <ListTodo size={14} /> Tasks Planned for Next Week
                                 </h4>
-                                <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.tasksPlannedNextWeek}</p>
+                                <p className="text-text-secondary leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.tasksPlannedNextWeek}</p>
                             </section>
 
                             {viewingReport.blockers && (
                                 <section>
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-text-muted mb-2 flex items-center gap-2">
                                         <AlertTriangle size={14} /> Blockers / Challenges
                                     </h4>
-                                    <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.blockers}</p>
+                                    <p className="text-text-secondary leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.blockers}</p>
                                 </section>
                             )}
 
                             {viewingReport.notes && (
                                 <section>
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-text-muted mb-2 flex items-center gap-2">
                                         <FileText size={14} /> Notes / Links
                                     </h4>
-                                    <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.notes}</p>
+                                    <p className="text-text-secondary leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.notes}</p>
                                 </section>
                             )}
 
                             {(viewingReport.hoursWorked || viewingReport.hoursWorked === 0) && (
                                 <section>
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-text-muted mb-2 flex items-center gap-2">
                                         <Clock size={14} /> Hours Worked
                                     </h4>
-                                    <p className="text-slate-600 font-bold">{viewingReport.hoursWorked}h</p>
+                                    <p className="text-text-primary font-bold">{viewingReport.hoursWorked}h</p>
                                 </section>
                             )}
                         </div>
 
-                        {/* Modal Footer */}
-                        <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
-                            <button onClick={handleEditFromView} className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-blue-600 hover:bg-blue-100 transition text-sm">
+                        <div className="p-6 border-t border-border flex justify-end gap-3 bg-surface-secondary">
+                            <button onClick={handleEditFromView} className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-primary-600 hover:bg-primary-100 transition text-sm">
                                 <Edit3 size={16} /> Edit Report
                             </button>
-                            <button onClick={closeViewModal} className="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 transition text-sm">
+                            <button onClick={closeViewModal} className="bg-text-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-primary-900 transition text-sm">
                                 Close
                             </button>
                         </div>

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from './context/AuthContext';
 import Profile from './pages/Profile';
+import Home from "./pages/Home";
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -36,6 +37,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Routes */}
+          <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
@@ -75,8 +77,6 @@ function App() {
           } />
           <Route path="/profile" element={<Profile />} />
 
-          {/* Default Redirect */}
-          <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </BrowserRouter>
   );

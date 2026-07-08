@@ -1,1 +1,76 @@
 @import "tailwindcss";
+
+@theme {
+  /* =========================
+     PRIMARY (Professional Blue)
+     ========================= */
+  --color-primary-50: #eef5ff;
+  --color-primary-100: #d9e8ff;
+  --color-primary-200: #bcd6ff;
+  --color-primary-300: #8fbbff;
+  --color-primary-400: #5f99ff;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #172554;
+
+  /* =========================
+     BACKGROUND
+     ========================= */
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f1f5f9;
+
+  /* =========================
+     TEXT
+     ========================= */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+
+  /* =========================
+     BORDER
+     ========================= */
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+
+  /* =========================
+     SUCCESS
+     ========================= */
+  --color-success-50: #ecfdf5;
+  --color-success-100: #d1fae5;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+
+  /* =========================
+     WARNING
+     ========================= */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+
+  /* =========================
+     DANGER
+     ========================= */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+
+  /* =========================
+     INFO
+     ========================= */
+  --color-info-50: #eff6ff;
+  --color-info-100: #dbeafe;
+  --color-info-500: #3b82f6;
+  --color-info-600: #2563eb;
+
+  --color-sidebar: #0B1120;
+  --color-sidebar-hover: #172554;
+  --color-sidebar-active: #1D4ED8;
+  --color-sidebar-border: #1E293B;
+  --color-sidebar-text: #CBD5E1;
+  --color-sidebar-muted: #94A3B8;
+}

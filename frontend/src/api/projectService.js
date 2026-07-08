@@ -5,9 +5,9 @@ export const getProjects = async () => {
     return res.data;
 };
 
-export const createProject = async (data) => {
-    const res = await API.post('/projects', data);
-    return res.data;
+export const createProject = async (projectData) => {
+    const response = await API.post('/projects', projectData);
+    return response.data;
 };
 
 export const updateProject = async (id, data) => {
