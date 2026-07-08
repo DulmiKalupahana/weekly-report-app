@@ -1,108 +1,237 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getAllReports } from '../../api/reportService';
+import { getProjects } from '../../api/projectService';
 import ManagerSidebar from '../../components/ManagerSidebar';
-import { Search, Filter, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { 
+    Search, Briefcase, ChevronRight, X, Loader2,
+    Calendar, CheckCircle2, ListTodo, AlertCircle, Info
+} from 'lucide-react';
 
 const TeamReports = () => {
     const [reports, setReports] = useState([]);
+    const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const displayText = (value, fallback = '-') => {
-        if (!value) return fallback;
-        if (typeof value === 'string' || typeof value === 'number') return value;
-        return value.name || value.email || value.title || fallback;
-    };
+    // Filter States
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedProject, setSelectedProject] = useState('');
+    const [filterMonth, setFilterMonth] = useState('');
+    const [dateFrom, setDateFrom] = useState('');
+    const [dateTo, setDateTo] = useState('');
 
-    useEffect(() => {
-        const fetchReports = async () => {
-            try {
-                const data = await getAllReports();
-                setReports(Array.isArray(data) ? data : data?.reports || []);
-            } catch (err) {
-                console.error("Failed to fetch all reports", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchReports();
+    // View Modal states
+    const [viewModalOpen, setViewModalOpen] = useState(false);
+    const [viewingReport, setViewingReport] = useState(null);
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [reportsData, projectsData] = await Promise.all([
+                getAllReports(),
+                getProjects()
+            ]);
+            const sortedReports = Array.isArray(reportsData)
+                ? reportsData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                : [];
+            setReports(sortedReports);
+            setProjects(projectsData);
+        } catch (err) {
+            console.error("Failed to fetch data", err);
+        } finally {
+            setLoading(false);
+        }
     }, []);
 
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
+
+    // Filtering Logic
+    const filteredReports = useMemo(() => {
+        return reports.filter(report => {
+            const matchesMember = report.user?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesProject = selectedProject ? (report.project?._id === selectedProject) : true;
+            const reportDate = new Date(report.weekStartDate);
+            
+            if (filterMonth) {
+                const reportMonthKey = `${reportDate.getFullYear()}-${String(reportDate.getMonth() + 1).padStart(2, '0')}`;
+                if (reportMonthKey !== filterMonth) return false;
+            }
+            const matchesFrom = dateFrom ? reportDate >= new Date(dateFrom) : true;
+            const matchesTo = dateTo ? reportDate <= new Date(dateTo) : true;
+
+            return matchesMember && matchesProject && matchesFrom && matchesTo;
+        });
+    }, [reports, searchQuery, selectedProject, filterMonth, dateFrom, dateTo]);
+
+    const handleViewDetails = (report) => {
+        setViewingReport(report);
+        setViewModalOpen(true);
+    };
+
+    const clearFilters = () => {
+        setSearchQuery('');
+        setSelectedProject('');
+        setFilterMonth('');
+        setDateFrom('');
+        setDateTo('');
+    };
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        return new Date(dateStr).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    };
+
     return (
-        <div className="flex bg-slate-50 min-h-screen">
+        <div className="flex bg-slate-50 min-h-screen font-sans">
             <ManagerSidebar />
-            <div className="ml-64 p-8 w-full">
-                <div className="flex justify-between items-end mb-8">
-                    <div>
-                        <h2 className="text-2xl font-bold text-slate-800">Team Dashboard</h2>
-                        <p className="text-slate-500">Analyze report submission status across the team</p>
-                    </div>
-                    {/* Filtering Section as per Point 3 */}
-                    <div className="flex gap-3">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-2.5 text-slate-400" size={18}/>
-                            <input type="text" placeholder="Search Member..." className="pl-10 pr-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-400 text-sm bg-white shadow-sm" />
+            <div className="ml-64 p-8 w-full max-w-7xl">
+                
+                {/* Header & Filter Controls */}
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-800">Team Reports</h2>
+                            <p className="text-slate-500 text-sm">Review and filter all submitted weekly reports</p>
                         </div>
-                        <select className="p-2 border rounded-xl text-sm bg-white shadow-sm outline-none">
-                            <option>Selected Week: Mar 18-24</option>
-                            <option>Week: Mar 11-17</option>
+                        {(searchQuery || selectedProject || filterMonth || dateFrom || dateTo) && (
+                            <button onClick={clearFilters} className="text-xs font-bold text-rose-500 flex items-center gap-1 hover:bg-rose-50 px-3 py-1 rounded-lg transition">
+                                <X size={14}/> Clear Filters
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filter Inputs */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16}/>
+                            <input type="text" placeholder="Search by member..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                        <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-100 rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                            <option value="">All Projects</option>
+                            {projects.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                         </select>
-                        <button className="bg-slate-800 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md hover:bg-slate-700">
-                            <Filter size={16}/> Filter
-                        </button>
+                        <input type="month" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-100 rounded-xl text-xs outline-none" title="Filter by Month" />
+                        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-100 rounded-xl text-xs outline-none" title="From Date" />
+                        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-100 rounded-xl text-xs outline-none" title="To Date" />
                     </div>
                 </div>
 
-                {/* Status Tracking Summary */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-white p-4 rounded-xl border-l-4 border-emerald-500 shadow-sm flex items-center justify-between">
-                        <div><p className="text-xs font-bold text-slate-400 uppercase">Submitted</p><h4 className="text-xl font-bold text-slate-800">12 Members</h4></div>
-                        <CheckCircle className="text-emerald-500 opacity-20" size={32}/>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl border-l-4 border-amber-500 shadow-sm flex items-center justify-between">
-                        <div><p className="text-xs font-bold text-slate-400 uppercase">Late Submission</p><h4 className="text-xl font-bold text-slate-800">2 Members</h4></div>
-                        <Clock className="text-amber-500 opacity-20" size={32}/>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl border-l-4 border-rose-500 shadow-sm flex items-center justify-between">
-                        <div><p className="text-xs font-bold text-slate-400 uppercase">Pending</p><h4 className="text-xl font-bold text-slate-800">1 Member</h4></div>
-                        <AlertCircle className="text-rose-500 opacity-20" size={32}/>
-                    </div>
-                </div>
-
-                {/* Detailed Table */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    {loading && <div className="p-4 text-sm text-slate-500">Loading reports...</div>}
-                    <table className="w-full text-left">
-                        <thead className="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500">Member</th>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500">Project</th>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500">Tasks Highlights</th>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500">Blockers</th>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500 text-center">Status</th>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500">Details</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {reports.map((report) => (
-                                <tr key={report._id || report.id} className="hover:bg-slate-50 transition">
-                                    <td className="p-4 font-bold text-slate-800">{displayText(report.user || report.name)}</td>
-                                    <td className="p-4 text-sm text-slate-600">{displayText(report.project || report.projectTag)}</td>
-                                    <td className="p-4 text-sm text-slate-500 truncate max-w-[200px]">{displayText(report.tasksCompleted || report.tasks)}</td>
-                                    <td className={`p-4 text-sm font-medium ${displayText(report.blockers, 'None') !== 'None' ? 'text-rose-500' : 'text-slate-400'}`}>{displayText(report.blockers, 'None')}</td>
-                                    <td className="p-4 text-center">
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${report.status === 'Submitted' ? 'bg-emerald-100 text-emerald-700' : report.status === 'Late' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}`}>
-                                            {report.status}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        <button className="text-blue-600 hover:text-blue-800 text-xs font-bold underline">Review Full</button>
-                                    </td>
+                {/* Report Table */}
+                <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+                    {loading ? (
+                        <div className="p-20 text-center text-slate-400">
+                            <Loader2 className="animate-spin mx-auto mb-2" size={32} />
+                            Loading all team reports...
+                        </div>
+                    ) : (
+                        <table className="w-full text-left">
+                            <thead className="bg-slate-50/50 border-b border-slate-100">
+                                <tr>
+                                    <th className="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Team Member</th>
+                                    <th className="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Project & Week</th>
+                                    <th className="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest">Tasks Highlights</th>
+                                    <th className="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-center">Blockers</th>
+                                    <th className="p-5 text-[10px] font-black uppercase text-slate-400 tracking-widest text-right">Details</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-slate-50">
+                                {filteredReports.length > 0 ? filteredReports.map((report) => (
+                                    <tr key={report._id} onClick={() => handleViewDetails(report)} className="hover:bg-blue-50/20 transition cursor-pointer group">
+                                        <td className="p-5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                                                    {report.user?.name?.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-800">{report.user?.name}</p>
+                                                    <p className="text-[10px] text-slate-400">{report.user?.email}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="p-5">
+                                            <p className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                                                <Briefcase size={12} className="text-blue-500"/> {report.project?.name}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 mt-1">Week: {formatDate(report.weekStartDate)}</p>
+                                        </td>
+                                        <td className="p-5">
+                                            <p className="text-xs text-slate-600 line-clamp-1 max-w-[200px]">
+                                                {report.tasksCompleted}
+                                            </p>
+                                        </td>
+                                        <td className="p-5 text-center">
+                                            {report.blockers ? (
+                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md">
+                                                    <AlertCircle size={10}/> Yes
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] text-slate-300">None</span>
+                                            )}
+                                        </td>
+                                        <td className="p-5 text-right">
+                                            <ChevronRight size={18} className="inline text-slate-300 group-hover:text-blue-500 transition-transform group-hover:translate-x-1"/>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan="5" className="p-20 text-center text-slate-400 italic">No reports found matching your selection.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             </div>
+
+            {/* --- VIEW MODAL --- */}
+            {viewModalOpen && viewingReport && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setViewModalOpen(false)}>
+                    <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+                        <div className="bg-blue-600 p-8 text-white relative">
+                            <button onClick={() => setViewModalOpen(false)} className="absolute top-6 right-6 hover:text-blue-200 transition-colors"><X size={24}/></button>
+                            <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+                                <Info size={28} />
+                            </div>
+                            <h3 className="text-2xl font-bold">{viewingReport.user?.name}'s Report</h3>
+                            <p className="text-blue-100 text-xs mt-1 flex items-center gap-1">
+                                <Calendar size={12}/> Week of {formatDate(viewingReport.weekStartDate)}
+                            </p>
+                        </div>
+                        <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
+                            <section>
+                                <h4 className="text-[10px] font-black uppercase text-slate-400 mb-2 flex items-center gap-2"><CheckCircle2 size={14} className="text-emerald-500"/> Tasks Completed</h4>
+                                <p className="text-sm text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 leading-relaxed whitespace-pre-wrap">{viewingReport.tasksCompleted}</p>
+                            </section>
+                            <section>
+                                <h4 className="text-[10px] font-black uppercase text-slate-400 mb-2 flex items-center gap-2"><ListTodo size={14} className="text-blue-500"/> Planned for Next Week</h4>
+                                <p className="text-sm text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 leading-relaxed whitespace-pre-wrap">{viewingReport.tasksPlannedNextWeek}</p>
+                            </section>
+                            {viewingReport.blockers && (
+                                <section>
+                                    <h4 className="text-[10px] font-black uppercase text-rose-400 mb-2 flex items-center gap-2"><AlertCircle size={14}/> Blockers / Challenges</h4>
+                                    <p className="text-sm text-rose-700 bg-rose-50 p-4 rounded-2xl border border-rose-100 leading-relaxed">{viewingReport.blockers}</p>
+                                </section>
+                            )}
+                            <div className="flex gap-4 pt-2">
+                                <div className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase mb-1">Hours Worked</h4>
+                                    <p className="text-lg font-bold text-slate-800">{viewingReport.hoursWorked || 0}h</p>
+                                </div>
+                                <div className="flex-1 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase mb-1">Project</h4>
+                                    <p className="text-xs font-bold text-blue-600 truncate">{viewingReport.project?.name}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6 border-t bg-slate-50 flex justify-end">
+                            <button onClick={() => setViewModalOpen(false)} className="bg-slate-900 text-white px-10 py-3 rounded-xl font-bold hover:bg-black transition-colors">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

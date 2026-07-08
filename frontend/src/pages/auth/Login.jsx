@@ -14,14 +14,10 @@ const Login = () => {
         try {
             const data = await loginUser({ email, password });
             
-            // Backend එකෙන් එන response එකේ user කියල key එකක් නෑ. 
-            // ඒ නිසා මුළු response එකම (token එකත් එක්ක) මෙහෙම වෙන් කරගන්න.
             const { token, ...userData } = data;
 
-            // දැන් login function එකට userData පාවිච්චි කරන්න
             login(userData, token);
 
-            // Redirect logic එකේදී database එකේ තියෙන role එක බලන්න
             const role = userData.role?.toLowerCase();
             if (role === 'manager') {
                 navigate('/manager-dashboard');

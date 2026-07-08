@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { 
-    createProject, 
-    getProjects, 
-    updateProject, 
-    deleteProject 
+const {
+    createProject,
+    getProjects,
+    updateProject,
+    deleteProject
 } = require('../controllers/projectController');
 const { protect, managerOnly } = require('../middleware/authMiddleware');
 

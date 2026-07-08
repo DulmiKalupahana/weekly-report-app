@@ -67,8 +67,8 @@ const MyProjects = () => {
     const filteredProjects = useMemo(() => {
         const q = searchQuery.toLowerCase().trim();
         if (!q) return projects;
-        return projects.filter(p => 
-            p.name.toLowerCase().includes(q) || 
+        return projects.filter(p =>
+            p.name.toLowerCase().includes(q) ||
             (p.description && p.description.toLowerCase().includes(q))
         );
     }, [projects, searchQuery]);

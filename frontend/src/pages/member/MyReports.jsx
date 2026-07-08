@@ -407,6 +407,18 @@ const MyReports = () => {
                                 <label className="block text-sm font-bold text-slate-700 mb-2">Tasks Planned for Next Week</label>
                                 <textarea value={form.tasksPlannedNextWeek} onChange={handleFieldChange('tasksPlannedNextWeek')} rows={3} className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500" />
                             </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-slate-700 mb-2">Blockers / Challenges (optional)</label>
+                                <textarea
+                                    value={form.blockers}
+                                    onChange={handleFieldChange('blockers')}
+                                    rows={2}
+                                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" 
+                                    placeholder="Any issues or blockers..."
+                                />
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-2">Hours Worked</label>
@@ -428,7 +440,81 @@ const MyReports = () => {
                 </div>
             )}
             
-            {/* View Modal logic remains the same... */}
+            {/* --- VIEW DETAILS MODAL --- */}
+            {viewModalOpen && viewingReport && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4" onClick={closeViewModal}>
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="bg-blue-600 p-8 text-white relative">
+                            <button onClick={closeViewModal} className="absolute top-6 right-6 text-white/80 hover:text-white">
+                                <X size={24} />
+                            </button>
+                            <div className="bg-white/20 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+                                <Folder size={28} />
+                            </div>
+                            <h3 className="text-2xl font-bold">{viewingReport.project?.name || 'Unknown Project'}</h3>
+                            <p className="text-blue-100 text-sm mt-1 flex items-center gap-2">
+                                <Calendar size={14} /> {formatDate(viewingReport.weekStartDate)}
+                                {viewingReport.weekEndDate ? ` – ${formatDate(viewingReport.weekEndDate)}` : ''}
+                            </p>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-8 space-y-6 max-h-[60vh] overflow-y-auto">
+                            <section>
+                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                    <CheckCircle2 size={14} /> Tasks Completed
+                                </h4>
+                                <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.tasksCompleted}</p>
+                            </section>
+
+                            <section>
+                                <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                    <ListTodo size={14} /> Tasks Planned for Next Week
+                                </h4>
+                                <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.tasksPlannedNextWeek}</p>
+                            </section>
+
+                            {viewingReport.blockers && (
+                                <section>
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                        <AlertTriangle size={14} /> Blockers / Challenges
+                                    </h4>
+                                    <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.blockers}</p>
+                                </section>
+                            )}
+
+                            {viewingReport.notes && (
+                                <section>
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                        <FileText size={14} /> Notes / Links
+                                    </h4>
+                                    <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm">{viewingReport.notes}</p>
+                                </section>
+                            )}
+
+                            {(viewingReport.hoursWorked || viewingReport.hoursWorked === 0) && (
+                                <section>
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+                                        <Clock size={14} /> Hours Worked
+                                    </h4>
+                                    <p className="text-slate-600 font-bold">{viewingReport.hoursWorked}h</p>
+                                </section>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
+                            <button onClick={handleEditFromView} className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-blue-600 hover:bg-blue-100 transition text-sm">
+                                <Edit3 size={16} /> Edit Report
+                            </button>
+                            <button onClick={closeViewModal} className="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 transition text-sm">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -24,9 +24,8 @@ const ProtectedRoute = ({ children, roleRequired }) => {
     if (loading) return <div>Loading...</div>;
     if (!user) return <Navigate to="/login" />;
 
-    // Role එක check කිරීමේදී lowercase කර පරීක්ෂා කරන්න
     if (roleRequired && user.role?.toLowerCase() !== roleRequired.toLowerCase()) {
-        return <Navigate to="/login" />; 
+        return <Navigate to="/login" />;
     }
 
     return children;
