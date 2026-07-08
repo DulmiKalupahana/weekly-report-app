@@ -121,7 +121,7 @@ const AiChatWidget = () => {
 
     return (
         <>
-            {/* ── Floating Chat Bubble ─────────────────────────────────── */}
+            {/*  Floating Chat Bubble */}
             {!isOpen && (
                 <button
                     id="ai-chat-bubble"
@@ -135,7 +135,7 @@ const AiChatWidget = () => {
                 </button>
             )}
 
-            {/* ── Chat Panel ───────────────────────────────────────────── */}
+            {/*  Chat Panel  */}
             {isOpen && (
                 <div className="fixed bottom-6 right-6 z-50 w-[400px] max-w-[calc(100vw-2rem)] h-[560px] max-h-[calc(100vh-4rem)] flex flex-col rounded-2xl border border-[#1E293B] bg-[#0B1120] shadow-2xl shadow-black/50 overflow-hidden animate-in">
                     {/* Header */}

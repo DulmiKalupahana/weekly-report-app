@@ -200,6 +200,8 @@ The following safeguards are implemented in code — not just documented:
 2. Add `GEMINI_API_KEY=your_key_here` to `backend/.env`.
 3. Restart the backend server.
 
+If you want a quick local manager test account, run `node seed-manager.js` from the backend folder to create one.
+
 If the key is missing, the endpoints return a clear `500` error message rather than crashing.
 
 ---

@@ -3,7 +3,7 @@ const Report = require('../models/Report');
 const Project = require('../models/Project');
 const User = require('../models/User');
 
-// ── Gemini client (initialized lazily) ─────────────────────────────────────
+//  Gemini client
 let geminiClient = null;
 const getClient = () => {
     if (!geminiClient) {
@@ -45,7 +45,7 @@ const generateWithRetry = async (payload) => {
     throw lastError;
 };
 
-// ── System prompt ──────────────────────────────────────────────────────────
+//  System prompt
 const SYSTEM_PROMPT = `You are an internal team-activity assistant for engineering managers.
 You have access to aggregated weekly report data from the team.
 Answer ONLY from the provided team-report context. If the context doesn't contain the answer, say so — never invent tasks, blockers, or names.
@@ -53,7 +53,7 @@ Keep responses concise, actionable, and well-formatted with markdown.
 When discussing workload, reference actual hours and report counts from the data.
 When discussing blockers, highlight recurring ones that appear across multiple weeks.`;
 
-// ── Data aggregation (privacy-safe) ────────────────────────────────────────
+//  Data aggregation
 const buildTeamContext = async () => {
     // 1. Date boundary: last MAX_REPORT_WEEKS weeks
     const cutoffDate = new Date();
@@ -72,7 +72,7 @@ const buildTeamContext = async () => {
     // 4. Fetch team members (names + roles only)
     const users = await User.find({}).select('name role').lean();
 
-    // ── Pre-aggregate into compact structures ──────────────────────────────
+    //  Pre-aggregate into compact structures
 
     // 4a. Per-member weekly summaries
     const memberSummaries = {};
@@ -150,7 +150,7 @@ const buildTeamContext = async () => {
     };
 };
 
-// ── POST /api/assistant/chat ───────────────────────────────────────────────
+// POST /api/assistant/chat
 // @desc    Chat with the AI assistant about team reports
 // @route   POST /api/assistant/chat
 // @access  Private (manager only)
@@ -207,7 +207,7 @@ const chatWithAssistant = async (req, res) => {
     }
 };
 
-// ── GET /api/assistant/summary ─────────────────────────────────────────────
+//  GET /api/assistant/summary
 // @desc    Generate an automatic weekly team summary
 // @route   GET /api/assistant/summary
 // @access  Private (manager only)
