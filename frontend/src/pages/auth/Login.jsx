@@ -2,11 +2,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { loginUser } from '../../api/authService';
-import { Mail, Lock, LogIn } from 'lucide-react';
+import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const { login } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -68,12 +69,21 @@ const Login = () => {
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 placeholder="Password"
-                                className="w-full pl-11 pr-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition text-text-primary"
+                                className="w-full pl-11 pr-11 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition text-text-primary"
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition"
+                                tabIndex={-1}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                         <button
                             type="submit"

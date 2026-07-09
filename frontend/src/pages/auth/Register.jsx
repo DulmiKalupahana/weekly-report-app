@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import API from "../../api/axios";
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, Briefcase, UserPlus } from 'lucide-react';
+import { User, Mail, Lock, Briefcase, UserPlus, Eye, EyeOff } from 'lucide-react';
 
 const Register = () => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'member' });
+    const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
 
@@ -40,7 +41,7 @@ const Register = () => {
                     ← Back to Home
                 </Link>
 
-                <form onSubmit={handleSubmit} className="p-8 bg-surface shadow-sm rounded-3xl w-full border border-border">
+                <form onSubmit={handleSubmit} autoComplete="off" className="p-8 bg-surface shadow-sm rounded-3xl w-full border border-border">
                     <h2 className="text-xl font-bold mb-6 text-text-primary">Register</h2>
                     <div className="space-y-4">
                         <div className="relative">
@@ -48,6 +49,7 @@ const Register = () => {
                             <input
                                 type="text"
                                 placeholder="Name"
+                                autoComplete="off"
                                 className="w-full pl-11 pr-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition text-text-primary"
                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                 required
@@ -59,6 +61,7 @@ const Register = () => {
                             <input
                                 type="email"
                                 placeholder="Email"
+                                autoComplete="off"
                                 className="w-full pl-11 pr-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition text-text-primary"
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 required
@@ -68,12 +71,22 @@ const Register = () => {
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
                             <input
-                                type="password"
+                                type={showPassword ? 'text' : 'password'}
                                 placeholder="Password"
-                                className="w-full pl-11 pr-4 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition text-text-primary"
+                                autoComplete="new-password"
+                                className="w-full pl-11 pr-11 py-3 border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition text-text-primary"
                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 required
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition"
+                                tabIndex={-1}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
 
                         <div>
